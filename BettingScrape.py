@@ -583,6 +583,43 @@ def get_stats_table(url, date):
     return statsdf
 
 
+# RETURNS A DF WITH STATS FROM ALL YEARS USED TO TRAIN THE INITIAL MODEL
+def create_stats_df_train():
+    seasons = ['2009-10', '2010-11', '2011-12', '2012-13', '2013-14', '2014-15', '2015-16', '2016-17', '2017-18', '2018-19']
+    months = ['11', '12', '1', '2', '3'] # nov - mar for a given season
+
+    # initialize dataframe
+    allstats_df = pd.DataFrame(columns=['date', 'teamnames', 'gp', 'wincnt', 'losscnt', 'minutes', 'offrtg',
+                'defrtg', 'netrtg', 'astpct', 'ast_to', 'astratio',
+                'orebpct', 'drebpct', 'rebpct', 'tovpct', 'efgpct', 'tspct', 'pace', 'pie'])
+
+    # loop through all days and get cumulative stats for each team on a given day
+    for season in seasons:
+        for month in months:
+            # get year
+            if (month == '11' or month == '12'):
+                year = season.split('-')[0]
+            else:
+                yrlist = season.split('-')
+                year = '20' + yrlist[1]
+
+            if (month == '11'):
+                days = 30
+            elif (month == '2'):
+                days = 28
+            else: # 12, 1, 3
+                days = 31
+
+            for i in range(1, days + 1):
+                url = 'https://stats.nba.com/teams/advanced/?sort=W&dir=-1&Season=' + season + '&SeasonType=Regular%20Season&DateTo=' + month + '%2F' + str(i) + '%2F' + year
+                date = year + '-' + month + '-' + str(i)
+                try:
+                    allstats_df = allstats_df.append(get_stats_table(url, date), sort=False)
+                except ValueError:
+                    print('ValueError: ' + date)
+                    continue
+                
+# GET TEAM STATS FOR A GIVEN DAY
 def create_stats_df(month, day, year):
     # loop through all days and get cumulative stats for each team on a given day
     url = 'https://stats.nba.com/teams/advanced/?sort=W&dir=-1&Season=18-19&SeasonType=Regular%20Season&DateTo=' + month + '%2F' + day + '%2F' + year
